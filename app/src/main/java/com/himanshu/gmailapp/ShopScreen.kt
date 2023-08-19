@@ -43,6 +43,7 @@ fun ShopScreen(
     viewModal: ItemsViewModal
 ){
     val allItems = viewModal.allWords.collectAsState().value
+
     Column(
         modifier = Modifier
             .fillMaxSize()

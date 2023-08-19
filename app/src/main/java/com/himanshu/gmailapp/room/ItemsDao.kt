@@ -16,7 +16,7 @@ interface ItemsDao{
     @Insert
     suspend fun insertAll(item: List<Item>)
     @Query("SELECT * FROM items")
-    fun getItems(): Flow<List<Item>>
+    suspend fun getItems(): List<Item>
 
     @Query("DELETE FROM items")
     suspend fun deleteAll()

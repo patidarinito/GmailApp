@@ -1,5 +1,6 @@
 package com.himanshu.gmailapp
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,10 +11,13 @@ import com.himanshu.gmailapp.room.Item
 import com.himanshu.gmailapp.room.ItemsDao
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -26,14 +30,18 @@ class ItemsViewModalFactory(private val itemsDao: ItemsDao) : ViewModelProvider.
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
 class ItemsViewModal(private val itemsDao: ItemsDao) : ViewModel() {
     // get data from database
+    private var _allWords: MutableStateFlow<List<Item>> = MutableStateFlow(emptyList())
+    val allWords: StateFlow<List<Item>> = _allWords.asStateFlow()
+
     init {
         viewModelScope.launch {
             try {
                 itemsDao.deleteAll()
-                delay(5000)
                 val productItems = ShopApi.retrofitService.getItems()
+
                 val listOfProducts = listOf<List<Product>>(
                     productItems.products.monitor,
                     productItems.products.monitorPro,
@@ -41,8 +49,8 @@ class ItemsViewModal(private val itemsDao: ItemsDao) : ViewModel() {
                     productItems.products.transmissiveStrip,
                     productItems.products.reflective3TStrip
                 )
-                listOfProducts.forEach{
-                    it.forEach {item->
+                listOfProducts.forEach {
+                    it.forEach { item ->
                         val newItem = Item(
                             buttonText = item.buttonText,
                             checkoutUrl = item.checkoutUrl,
@@ -58,15 +66,13 @@ class ItemsViewModal(private val itemsDao: ItemsDao) : ViewModel() {
                         itemsDao.insert(newItem)
                     }
                 }
-            }
-            catch (e : IOException){
+                _allWords.value = itemsDao.getItems()
+            } catch (e: IOException) {
                 println("Error in saving $e")
             }
 
         }
     }
-    private val _allWords: Flow<List<Item>> = itemsDao.getItems()
-    val allWords: StateFlow<List<Item>> = _allWords
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList<Item>())
+
 
 }
