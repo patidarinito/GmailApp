@@ -6,6 +6,7 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,24 +33,32 @@ sealed class BottomScreen(
         route = "Mail",
         title = "Mails",
         icon = Icons.Default.Email
-    )object Call: BottomScreen(
+    )
+    object Call: BottomScreen(
         route = "Call",
         title = "Calls",
         icon = Icons.Default.Settings
     )
+    object Shop: BottomScreen(
+        route = "Shop",
+        title = "Shops",
+        icon = Icons.Default.ShoppingCart
+    )
 }
 val items = listOf(
     BottomScreen.Mail,
-    BottomScreen.Call
+    BottomScreen.Call,
+    BottomScreen.Shop
+
 )
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    viewModal: ItemsViewModal,
     navController: NavHostController = rememberNavController()
 ){
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination
-
     var scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
     androidx.compose.material.Scaffold(
@@ -60,7 +69,7 @@ fun MainScreen(
                     scaffoldState.drawerState.open()
                 }
             }
-            else MeetTopBar{
+            if(currentRoute?.route == BottomScreen.Call.route) MeetTopBar{
                 scope.launch {
                     scaffoldState.drawerState.open()
                 }
@@ -98,9 +107,8 @@ fun MainScreen(
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                        },
-
-                        )
+                        }
+                    )
                 }
             }
 
@@ -119,12 +127,15 @@ fun MainScreen(
             composable(route = BottomScreen.Call.route){
                 VideoCallScreen()
             }
+            composable(route = BottomScreen.Shop.route){
+                ShopScreen(viewModal)
+            }
         }
 
     }
 }
-@Preview
-@Composable
-fun GmailMainPreview(){
-    MainScreen()
-}
+//@Preview
+//@Composable
+//fun GmailMainPreview(){
+//    MainScreen()
+//}
